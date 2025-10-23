@@ -1,9 +1,11 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3.9
 
 from argparse import ArgumentParser
 import xmlschema
-from xmlschema.components import (
+from xmlschema import (
     XsdElement,
+)
+from xmlschema.validators import (
     XsdAnyElement,
     XsdComplexType,
     XsdAtomicBuiltin,
@@ -76,7 +78,7 @@ class GenXML:
     
     # shorten the namespace
     def short_ns(self, ns):
-        for k, v in self.xsd.namespaces.iteritems():
+        for k, v in self.xsd.namespaces.items():
             if k == '':
                 continue
             if v == ns:
@@ -102,13 +104,13 @@ class GenXML:
 
     # header of xml doc
     def print_header(self):
-        print "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+        print("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>")
 
     
     # put all defined namespaces as a string
     def ns_map_str(self):
         ns_all = ''
-        for k, v in self.xsd.namespaces.iteritems():
+        for k, v in self.xsd.namespaces.items():
             if k == '':
                 continue
             else:
@@ -146,14 +148,14 @@ class GenXML:
         nextg = g._group
         y = len(nextg)
         if y == 0:
-            print '<!--empty-->'
+            print('<!--empty-->')
             return
     
-        print '<!--START:[' + model + ']-->'
+        print('<!--START:[' + model + ']-->')
         if self.enable_choice and model == 'choice':
-            print '<!--next item is from a [choice] group with size=' + str(y) + '-->'
+            print('<!--next item is from a [choice] group with size=' + str(y) + '-->')
         else:
-            print '<!--next ' + str(y) + ' items are in a [' + model + '] group-->'
+            print('<!--next ' + str(y) + ' items are in a [' + model + '] group-->')
             
         for ng in nextg:
             if isinstance(ng, XsdElement):
@@ -165,51 +167,51 @@ class GenXML:
         
             if self.enable_choice and model == 'choice':
                 break
-        print '<!--END:[' + model + ']-->' 
+        print('<!--END:[' + model + ']-->')
     
     
     # print a node
     def node2xml(self, node):
-        if node.min_occurs == 0:
-            print '<!--next 1 item is optional (minOcuurs = 0)-->'
-        if node.max_occurs >  1:
-            print '<!--next 1 item is multiple (maxOccurs > 1)-->'
+        if node.max_occurs is not None and node.min_occurs == 0:
+            print('<!--next 1 item is optional (minOcuurs = 0)-->')
+        if node.max_occurs is not None and node.max_occurs > 1:
+            print('<!--next 1 item is multiple (maxOccurs > 1)-->')
         
         if isinstance(node, XsdAnyElement):
-            print '<_ANY_/>'
+            print('<_ANY_/>')
             return
 
         if isinstance(node.type, XsdComplexType):
             n = self.use_short_ns(node.name)
             if node.type.is_simple():
-                print '<!--simple content-->'
-                tp = str(node.type.content_type)
-                print self.start_tag(n) + self.genval(tp) + self.end_tag(n)
+                print('<!--simple content-->')
+                tp = str(node.type.content)
+                print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
             else:
-                print '<!--complex content-->'
-                print self.start_tag(n)
-                self.group2xml(node.type.content_type)
-                print self.end_tag(n)
+                print('<!--complex content-->')
+                print(self.start_tag(n))
+                self.group2xml(node.type.content)
+                print(self.end_tag(n))
         elif isinstance(node.type, XsdAtomicBuiltin):
             n = self.use_short_ns(node.name)
             tp = str(node.type)
-            print self.start_tag(n) + self.genval(tp) + self.end_tag(n)
+            print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
         elif isinstance(node.type, XsdSimpleType):
             n = self.use_short_ns(node.name)
             if isinstance(node.type, XsdList):
-                print '<!--simpletype: list-->'
+                print('<!--simpletype: list-->')
                 tp = str(node.type.item_type)
-                print self.start_tag(n) + self.genval(tp) + self.end_tag(n)
+                print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
             elif isinstance(node.type, XsdUnion):
-                print '<!--simpletype: union.-->'
-                print '<!--default: using the 1st type-->'
+                print('<!--simpletype: union.-->')
+                print('<!--default: using the 1st type-->')
                 tp = str(node.type.member_types[0].base_type)
-                print self.start_tag(n) + self.genval(tp) + self.end_tag(n)
+                print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
             else:
                 tp = str(node.type.base_type)
-                print self.start_tag(n) + self.genval(tp) + self.end_tag(n)
+                print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
         else:
-            print 'ERROR: unknown type: ' + node.type
+            print('ERROR: unknown type: ' + node.type)
     
     
     # setup and print everything
